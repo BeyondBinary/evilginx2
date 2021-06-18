@@ -201,6 +201,10 @@ func (c *Config) SetServerIP(ip_addr string) {
 	c.cfg.WriteConfig()
 }
 
+func (c *Config) HasRedirectUrl() bool {
+	return c.redirectUrl != ""
+}
+
 func (c *Config) EnableProxy(enabled bool) {
 	c.proxyEnabled = enabled
 	c.cfg.Set(CFG_PROXY_ENABLED, c.proxyEnabled)
