@@ -161,6 +161,12 @@ func (t *Terminal) DoWork() {
 			if err != nil {
 				log.Error("blacklist: %v", err)
 			}
+		case "geoip":
+			cmd_ok = true
+			err := t.handleGeoIP(args[1:])
+			if err != nil {
+				log.Error("blacklist: %v", err)
+			}
 		case "help":
 			cmd_ok = true
 			if len(args) == 2 {
@@ -242,6 +248,29 @@ func (t *Terminal) handleBlacklist(args []string) error {
 			return nil
 		case "off":
 			t.cfg.SetBlacklistMode(args[0])
+			return nil
+		}
+	}
+	return fmt.Errorf("invalid syntax: %s", args)
+}
+
+func (t *Terminal) handleGeoIP(args []string) error {
+	pn := len(args)
+	if pn == 0 {
+		mode := t.cfg.GetGeoIPMode()
+		log.Info("geoip mode set to: %s", mode)
+		return nil
+	} else if pn == 1 {
+		t.p.geoiplist.SetGeoIPMode(args[0])
+		switch args[0] {
+		case "allow":
+			t.cfg.SetGeoIPMode(args[0])
+			return nil
+		case "block":
+			t.cfg.SetGeoIPMode(args[0])
+			return nil
+		case "off":
+			t.cfg.SetGeoIPMode(args[0])
 			return nil
 		}
 	}
@@ -1038,6 +1067,13 @@ func (t *Terminal) createHelp() {
 	h.AddSubCommand("blacklist", []string{"unauth"}, "unauth", "block and blacklist ip addresses only for unauthorized requests")
 	h.AddSubCommand("blacklist", []string{"off"}, "off", "never add any ip addresses to blacklist")
 
+	h.AddCommand("geoip", "general", "manage automatic blacklisting of requesting ip addresses based on Geo IP", "Select how the list of configured countries will be treated.", LAYER_TOP,
+		readline.PcItem("geoip", readline.PcItem("allow"), readline.PcItem("block"), readline.PcItem("off")))
+
+	h.AddSubCommand("blacklist", nil, "", "show current blacklisting mode")
+	h.AddSubCommand("blacklist", []string{"allow"}, "allow", "Only allow requests from countries in the configured list")
+	h.AddSubCommand("blacklist", []string{"block"}, "block", "Block all requests from countries in the configured list")
+	h.AddSubCommand("blacklist", []string{"off"}, "off", "Do not block based on originating country")
 	h.AddCommand("clear", "general", "clears the screen", "Clears the screen.", LAYER_TOP,
 		readline.PcItem("clear"))
 

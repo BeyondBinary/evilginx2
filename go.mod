@@ -14,6 +14,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/miekg/dns v1.1.22
 	github.com/mwitkow/go-http-dialer v0.0.0-20161116154839-378f744fb2b8
+	github.com/oschwald/geoip2-golang v1.5.0
 	github.com/spf13/viper v1.4.0
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
 	github.com/tidwall/buntdb v1.1.0

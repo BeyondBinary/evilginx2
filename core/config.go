@@ -35,6 +35,7 @@ type Config struct {
 	proxyUsername     string
 	proxyPassword     string
 	blackListMode     string
+	geoIPMode         string
 	proxyEnabled      bool
 	sitesEnabled      map[string]bool
 	sitesHidden       map[string]bool
@@ -68,6 +69,7 @@ const (
 	CFG_PROXY_PASSWORD     = "proxy_password"
 	CFG_PROXY_ENABLED      = "proxy_enabled"
 	CFG_BLACKLIST_MODE     = "blacklist_mode"
+	CFG_GEOIP_MODE         = "geoip_mode"
 )
 
 const DEFAULT_REDIRECT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ" // Rick'roll
@@ -121,6 +123,7 @@ func NewConfig(cfg_dir string, path string) (*Config, error) {
 	c.proxyPassword = c.cfg.GetString(CFG_PROXY_PASSWORD)
 	c.proxyEnabled = c.cfg.GetBool(CFG_PROXY_ENABLED)
 	c.blackListMode = c.cfg.GetString(CFG_BLACKLIST_MODE)
+	c.geoIPMode = c.cfg.GetString(CFG_GEOIP_MODE)
 	s_enabled := c.cfg.GetStringSlice(CFG_SITES_ENABLED)
 	for _, site := range s_enabled {
 		c.sitesEnabled[site] = true
@@ -132,6 +135,10 @@ func NewConfig(cfg_dir string, path string) (*Config, error) {
 
 	if !stringExists(c.blackListMode, []string{"all", "unauth", "off"}) {
 		c.SetBlacklistMode("off")
+	}
+
+	if !stringExists(c.geoIPMode, []string{"block", "allow", "off"}) {
+		c.SetGeoIPMode("off")
 	}
 
 	var param string
@@ -378,6 +385,15 @@ func (c *Config) SetBlacklistMode(mode string) {
 	log.Info("blacklist mode set to: %s", mode)
 }
 
+func (c *Config) SetGeoIPMode(mode string) {
+	if stringExists(mode, []string{"allow", "block", "off"}) {
+		c.geoIPMode = mode
+		c.cfg.Set(CFG_GEOIP_MODE, mode)
+		c.cfg.WriteConfig()
+	}
+	log.Info("geoip mode set to: %s", mode)
+}
+
 func (c *Config) SetVerificationParam(param string) {
 	c.verificationParam = param
 	c.cfg.Set(CFG_VERIFICATION_PARAM, param)
@@ -541,4 +557,8 @@ func (c *Config) GetTemplatesDir() string {
 
 func (c *Config) GetBlacklistMode() string {
 	return c.blackListMode
+}
+
+func (c *Config) GetGeoIPMode() string {
+	return c.geoIPMode
 }
