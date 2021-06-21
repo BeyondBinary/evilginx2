@@ -114,7 +114,9 @@ func main() {
 		return
 	}
 
-	geoiplist, err := core.NewGeoIPList(filepath.Join(*cfg_dir, "countries.txt"), filepath.Join(*cfg_dir, "data", "GeoLite2-Country.mmdb"))
+	geo_mode := cfg.GetGeoIPMode()
+
+	geoiplist, err := core.NewGeoIPList(filepath.Join(*cfg_dir, "countries.txt"), filepath.Join(*cfg_dir, "data", "GeoLite2-Country.mmdb"), geo_mode)
 	if err != nil {
 		log.Error("geoip: %s", err)
 		return

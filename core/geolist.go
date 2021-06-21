@@ -22,7 +22,7 @@ type GeoIPList struct {
 	lookup		*geoip2.Reader
 }
 
-func NewGeoIPList(path string, db_path string) (*GeoIPList, error) {
+func NewGeoIPList(path string, db_path string, initial_mode string) (*GeoIPList, error) {
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
@@ -34,8 +34,18 @@ func NewGeoIPList(path string, db_path string) (*GeoIPList, error) {
 		log.Error("Couldn't open GeoIP database");
 	}
 
+	initial_mode_int := GEOIP_MODE_OFF
+
+	switch initial_mode {
+	case "allow":
+		initial_mode_int = GEOIP_MODE_ALLOWLIST
+	case "block":
+		initial_mode_int = GEOIP_MODE_BLOCKLIST
+	}
+
+
 	geoip := &GeoIPList{
-		mode:       GEOIP_MODE_ALLOWLIST,
+		mode:       initial_mode_int,
 		lookup:	    lookup,
 	}
 
